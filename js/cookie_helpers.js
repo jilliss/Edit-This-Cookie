@@ -1,4 +1,4 @@
-function buildUrl(domain, path, searchUrl) {
+function buildUrl (domain, path, searchUrl) {
     // Keep same protocol as searchUrl
     // This fixes a bug when we want to unset 'secure' property in an https domain
     var secure = searchUrl.indexOf("https://") === 0;
@@ -9,7 +9,7 @@ function buildUrl(domain, path, searchUrl) {
     return "http" + ((secure) ? "s" : "") + "://" + domain + path;
 }
 
-function deleteAll(cookieList, searchUrl) {
+function deleteAll (cookieList, searchUrl) {
     for (var i = 0; i < cookieList.length; i++) {
         var curr = cookieList[i];
         var url = buildUrl(curr.domain, curr.path, searchUrl);
@@ -17,7 +17,7 @@ function deleteAll(cookieList, searchUrl) {
     }
 }
 
-function deleteCookie(url, name, store, callback) {
+function deleteCookie (url, name, store, callback) {
     chrome.cookies.remove({
         'url': url,
         'name': name,
@@ -33,7 +33,7 @@ function deleteCookie(url, name, store, callback) {
     })
 }
 
-function Filter() {
+function Filter () {
     var filter = {};
 
     this.setUrl = function (url) {
@@ -57,7 +57,7 @@ function Filter() {
     };
 }
 
-function cookieForCreationFromFullCookie(fullCookie) {
+function cookieForCreationFromFullCookie (fullCookie) {
     var newCookie = {};
     //If no real url is available use: "https://" : "http://" + domain + path
     newCookie.url = "http" + ((fullCookie.secure) ? "s" : "") + "://" + fullCookie.domain + fullCookie.path;
@@ -74,7 +74,7 @@ function cookieForCreationFromFullCookie(fullCookie) {
     return newCookie;
 }
 
-function compareCookies(b, a) {
+function compareCookies (b, a) {
     try {
         if (b.name !== a.name)
             return false;
@@ -179,6 +179,33 @@ var cookiesToString = {
             cookie = cookies[i];
             string += 'Set-Cookie3: ' + cookie.name + '=' + cookie.value + '; path="/"; domain=' + cookie.domain + '; path_spec; expires="' + (cookie.expirationDate ? cookie.expirationDate : "0") + '"; version=0\n';
         }
+        return string;
+    } ,
+
+    "python": function (cookies, url) {
+        var string = "";
+        string += "[\n";
+        for (var i = 0; i < cookies.length; i++) {
+            cookie = cookies[i];
+            cookie.id = i + 1;
+            switch (cookie.sameSite) {
+                case "unspecified":
+                case "no_unspecified":
+                default:
+                    cookie.sameSite = 'None';
+                    break;
+                case "lax":
+                    cookie.sameSite = 'Lax';
+                    break;
+                case "strict":
+                    cookie.sameSite = "Strict";
+                    break;
+            }
+            string += JSON.stringify(cookie, null, 4);
+            if (i < cookies.length - 1)
+                string += ",\n";
+        }
+        string += "\n]";
         return string;
     }
 };
